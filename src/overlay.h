@@ -15,6 +15,7 @@
 
 #include "dbus_info.h"
 #include "logging.h"
+#include "obs_studio.h"
 
 struct frame_stat {
    uint64_t stats[OVERLAY_PLOTS_MAX];
@@ -81,14 +82,6 @@ struct LOAD_DATA {
    unsigned high_load;
 };
 
-struct obs_capture_stats_data
-{
-    uint32_t time;
-    uint64_t bytes;
-};
-#define OBS_CAPTURE_STATS_SHM "/com_obsproject_vkcapture_CaptureStats"
-#define OBS_CAPTURE_STATS_SEM "/com_obsproject_vkcapture_CaptureStatsSem"
-
 extern struct fps_limit fps_limit_stats;
 extern uint32_t deviceID;
 
@@ -102,8 +95,8 @@ extern bool steam_focused;
 extern int fan_speed;
 extern int current_preset;
 extern std::vector<float> frametime_data;
-extern obs_capture_stats_data* obs_capture_stats_data;
-extern sem_t* obs_capture_stats_sem;
+extern struct obs_studio_data* obs_studio_stats;
+extern sem_t* obs_studio_stats_sem;
 
 void init_spdlog();
 void overlay_new_frame(const struct overlay_params& params);

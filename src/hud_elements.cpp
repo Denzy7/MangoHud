@@ -1123,32 +1123,32 @@ void HudElements::obs_stats()
     HUDElements.TextColored(HUDElements.colors.text, "OBS");
     int semval = 0;
 
-    sem_getvalue(obs_capture_stats_sem, &semval);
-    if(sem_trywait(obs_capture_stats_sem) < 0 && errno != EAGAIN)
+    sem_getvalue(obs_studio_stats_sem, &semval);
+    if(sem_trywait(obs_studio_stats_sem) < 0 && errno != EAGAIN)
     {
         fprintf(stderr, "%s\n", strerror(errno));
     }
     if(semval > 0 && !obs_capture_recording){
         obs_capture_recording = true;
         int fd;
-        if ((fd = shm_open(OBS_CAPTURE_STATS_SHM, O_RDONLY, 0666)) < 0)
+        if ((fd = shm_open(MANGOHUD_OBS_STATS_SHM, O_RDONLY, 0666)) < 0)
         {
             fprintf(stderr, "shm_open %s\n", strerror(errno));
         }
-        if ((obs_capture_stats_data = static_cast<struct obs_capture_stats_data*>(mmap(nullptr, sizeof(struct obs_capture_stats_data), PROT_READ, MAP_SHARED, fd, 0))) == MAP_FAILED)
+        if ((obs_studio_stats = static_cast<struct obs_studio_data*>(mmap(nullptr, sizeof(struct obs_studio_data), PROT_READ, MAP_SHARED, fd, 0))) == MAP_FAILED)
         {
             fprintf(stderr, "mmap %s\n", strerror(errno));
         }
     }else if(semval > 0 && obs_capture_recording)
     {
         obs_capture_recording = false;
-        obs_capture_stats_data = nullptr;
+        obs_studio_stats = nullptr;
     }
 
-    if(obs_capture_recording && obs_capture_stats_data)
+    if(obs_capture_recording && obs_studio_stats)
     {
         char time[9];
-        time_t t = obs_capture_stats_data->time;
+        time_t t = obs_studio_stats->time;
         struct tm* tm = gmtime(&t);
         strftime(time, sizeof(time), "%H:%M:%S", tm);
 
@@ -1156,7 +1156,7 @@ void HudElements::obs_stats()
         right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%s", time);
 
         ImguiNextColumnOrNewRow();
-        right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%.1fMiB", obs_capture_stats_data->bytes / 1024.0 / 1024.0);
+        right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%.1fMiB", obs_studio_stats->bytes / 1024.0 / 1024.0);
     }else {
         ImguiNextColumnOrNewRow();
         right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "Inactive");

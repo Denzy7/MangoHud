@@ -55,8 +55,8 @@ int fan_speed;
 fcatoverlay fcatstatus;
 std::string drm_dev;
 int current_preset;
-struct obs_capture_stats_data* obs_capture_stats_data = nullptr;
-sem_t* obs_capture_stats_sem = SEM_FAILED;
+struct obs_studio_data* obs_studio_stats = nullptr;
+sem_t* obs_studio_stats_sem = SEM_FAILED;
 void init_spdlog()
 {
    if (spdlog::get("MANGOHUD"))
@@ -99,9 +99,9 @@ void init_spdlog()
       spdlog::set_level(spdlog::level::from_str(log_level));
 #endif
    }
-   if((obs_capture_stats_sem = sem_open(OBS_CAPTURE_STATS_SEM, 0)) == SEM_FAILED)
+   if((obs_studio_stats_sem = sem_open(MANGOHUD_OBS_STATS_SEM, O_CREAT, 0644, 0)) == SEM_FAILED)
    {
-      fprintf(stderr, "cannot sem_open %s [ %s ]\n", OBS_CAPTURE_STATS_SEM, strerror(errno));
+      fprintf(stderr, "cannot sem_open %s [ %s ]\n", MANGOHUD_OBS_STATS_SEM, strerror(errno));
    }
 
 }
