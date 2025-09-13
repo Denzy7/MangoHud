@@ -11,6 +11,7 @@
 #include "overlay_params.h"
 #include "hud_elements.h"
 #include "engine_types.h"
+#include <semaphore.h>
 
 #include "dbus_info.h"
 #include "logging.h"
@@ -80,6 +81,14 @@ struct LOAD_DATA {
    unsigned high_load;
 };
 
+struct obs_capture_stats_data
+{
+    uint32_t time;
+    uint64_t bytes;
+};
+#define OBS_CAPTURE_STATS_SHM "/com_obsproject_vkcapture_CaptureStats"
+#define OBS_CAPTURE_STATS_SEM "/com_obsproject_vkcapture_CaptureStatsSem"
+
 extern struct fps_limit fps_limit_stats;
 extern uint32_t deviceID;
 
@@ -93,6 +102,8 @@ extern bool steam_focused;
 extern int fan_speed;
 extern int current_preset;
 extern std::vector<float> frametime_data;
+extern obs_capture_stats_data* obs_capture_stats_data;
+extern sem_t* obs_capture_stats_sem;
 
 void init_spdlog();
 void overlay_new_frame(const struct overlay_params& params);
