@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <spdlog/spdlog.h>
 #include <algorithm>
 #include <functional>
@@ -34,8 +35,6 @@
 #define CHAR_FAHRENHEIT "\xe2\x84\x89"
 
 using namespace std;
-
-bool obs_capture_recording = false;
 
 // Cut from https://github.com/ocornut/imgui/pull/2943
 // Probably move to ImGui
@@ -1117,50 +1116,61 @@ void HudElements::resolution(){
         ImGui::PopFont();
     }
 }
-void HudElements::obs_stats()
+void HudElements::obs()
 {
-    ImguiNextColumnFirstItem();
-    HUDElements.TextColored(HUDElements.colors.text, "OBS");
-    int semval = 0;
+    if(!HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_obs])
+        return;
 
-    sem_getvalue(obs_studio_stats_sem, &semval);
-    if(sem_trywait(obs_studio_stats_sem) < 0 && errno != EAGAIN)
+    if(!HUDElements.obs_ptr)
+        HUDElements.obs_ptr = std::make_unique<ObsStudio>();
+    if(!HUDElements.obs_ptr->stats)
     {
-        fprintf(stderr, "%s\n", strerror(errno));
-    }
-    if(semval > 0 && !obs_capture_recording){
-        obs_capture_recording = true;
         int fd;
-        if ((fd = shm_open(MANGOHUD_OBS_STATS_SHM, O_RDONLY, 0666)) < 0)
+        if ((fd = shm_open(MANGOHUD_OBS_STATS_SHM, O_CREAT | O_RDWR, 0666)) < 0)
         {
-            fprintf(stderr, "shm_open %s\n", strerror(errno));
+            SPDLOG_ERROR("shm_open {}", strerror(errno));
         }
-        if ((obs_studio_stats = static_cast<struct obs_studio_data*>(mmap(nullptr, sizeof(struct obs_studio_data), PROT_READ, MAP_SHARED, fd, 0))) == MAP_FAILED)
+        if(fd > 0 && ftruncate(fd, sizeof(ObsStats)) < 0)
         {
-            fprintf(stderr, "mmap %s\n", strerror(errno));
+            SPDLOG_ERROR( "ftruncate {}", strerror(errno));
         }
-    }else if(semval > 0 && obs_capture_recording)
-    {
-        obs_capture_recording = false;
-        obs_studio_stats = nullptr;
+        if ((HUDElements.obs_ptr->stats = static_cast<ObsStats*>(mmap(nullptr, sizeof(ObsStats), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0))) == MAP_FAILED)
+        {
+            SPDLOG_ERROR( "mmap {}", strerror(errno));
+        }else {
+            snprintf(HUDElements.obs_ptr->stats->exe, sizeof(HUDElements.obs_ptr->stats->exe),
+                    "%s", global_proc_name.c_str());
+            HUDElements.obs_ptr->stats->prefix_exe = HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_obs_prefix_exe];
+            HUDElements.obs_ptr->stats->running_mangohud = 1;
+            atexit(HUDElements.obs_ptr->atexit_func);
+        }
     }
 
-    if(obs_capture_recording && obs_studio_stats)
+    ImguiNextColumnFirstItem();
+    ImGui::PushFont(HUDElements.sw_stats->font_secondary);
+    HUDElements.TextColored(HUDElements.colors.engine, "OBS");
+
+    if(HUDElements.obs_ptr->stats && HUDElements.obs_ptr->stats->recording)
     {
         char time[9];
-        time_t t = obs_studio_stats->time;
+        time_t t = HUDElements.obs_ptr->stats->time;
         struct tm* tm = gmtime(&t);
+        /* assuming recording of < 24 hrs */
         strftime(time, sizeof(time), "%H:%M:%S", tm);
 
         ImguiNextColumnOrNewRow();
         right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%s", time);
 
         ImguiNextColumnOrNewRow();
-        right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%.1fMiB", obs_studio_stats->bytes / 1024.0 / 1024.0);
-    }else {
+        right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%.1fMiB", HUDElements.obs_ptr->stats->bytes / 1024.0 / 1024.0);
+    }else if(HUDElements.obs_ptr->stats && !HUDElements.obs_ptr->stats->recording){
         ImguiNextColumnOrNewRow();
         right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "Inactive");
+    }else{
+        ImguiNextColumnOrNewRow();
+        right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "Error");
     }
+    ImGui::PopFont();
 }
 void HudElements::show_fps_limit(){
     if (HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_show_fps_limit]){
@@ -2016,7 +2026,7 @@ void HudElements::sort_elements(const std::pair<std::string, std::string>& optio
         {"display_server", {_display_session}},
         {"fex_stats", {fex_stats}},
         {"ftrace", {ftrace}},
-        {"obs_stats", {obs_stats}},
+        {"obs", {obs}},
     };
 
     auto check_param = display_params.find(param);
@@ -2151,11 +2161,13 @@ void HudElements::legacy_elements(){
         ordered_functions.push_back({_display_session, "display_session", value});
     if (params->fex_stats.enabled)
         ordered_functions.push_back({fex_stats, "fex_stats", value});
+    if (params->enabled[OVERLAY_PARAM_ENABLED_obs])
+        ordered_functions.push_back({obs, "obs", value});
+
 #ifdef HAVE_FTRACE
     if (params->ftrace.enabled)
         ordered_functions.push_back({ftrace, "ftrace", value});
 #endif
-    ordered_functions.push_back({obs_stats, "obs_stats", value});
 }
 
 void HudElements::update_exec(){

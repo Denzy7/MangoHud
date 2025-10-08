@@ -95,6 +95,7 @@ if is_unixy
     'net.cpp',
     'shell.cpp',
     'ftrace.cpp',
+    'obs_studio.cpp',
   )
 
   if get_option('with_fex')
@@ -330,7 +331,7 @@ if obs.found()
   mangohud_obs = shared_module(
     'mangohud_obs',
     files(
-      'obs_studio.c'
+      'obs_plugin.c'
     ),
     dependencies: [
       obs

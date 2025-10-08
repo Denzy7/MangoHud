@@ -15,7 +15,6 @@
 
 #include "dbus_info.h"
 #include "logging.h"
-#include "obs_studio.h"
 
 struct frame_stat {
    uint64_t stats[OVERLAY_PLOTS_MAX];
