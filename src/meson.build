@@ -62,7 +62,8 @@ vklayer_files = files(
   'file_utils.cpp',
   'nvidia.cpp',
   'gpu_fdinfo.cpp',
-  'amdgpu.cpp'
+  'amdgpu.cpp',
+  'obs_studio.cpp',
 )
 
 opengl_files  = []
@@ -95,7 +96,6 @@ if is_unixy
     'net.cpp',
     'shell.cpp',
     'ftrace.cpp',
-    'obs_studio.cpp',
   )
 
   if get_option('with_fex')

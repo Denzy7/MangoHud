@@ -38,9 +38,7 @@ void mangohud_obs_frontend_event_callback(enum obs_frontend_event event, void* p
 
         case OBS_FRONTEND_EVENT_RECORDING_STARTING:
             {
-                /* afaict output is reused after first recording */
-                /*if(!data.output)*/
-                    data.output = obs_frontend_get_recording_output();
+                data.output = obs_frontend_get_recording_output();
 
                 blog(LOG_INFO, "%s: starting recording", MANGOHUD_OBS_NAME);
                 data.time_hires = 0;
@@ -76,13 +74,11 @@ void mangohud_obs_frontend_event_callback(enum obs_frontend_event event, void* p
                  *
                  * changing filename will get complicated with multiple instances of mangohud
                  * the last instance will prevail
-                 *
-                 * calling obs_frontend_get_last_recording causes an internal OBS memory leak
-                 * as reported by obs when exiting
                  */
-                const char* recording = obs_frontend_get_last_recording();
-                char* basename = strdup(recording);
+                char* recording = obs_frontend_get_last_recording();
                 const char* filename = strrchr(recording, '/') + 1;
+
+                char* basename = strdup(recording);
                 *strrchr(basename, '/') = 0;
 
                 const size_t newpath_sz = PATH_MAX;
@@ -91,6 +87,7 @@ void mangohud_obs_frontend_event_callback(enum obs_frontend_event event, void* p
                 rename(recording, newpath);
                 free(newpath);
                 free(basename);
+                bfree(recording);
                 break;
             }
 
@@ -101,6 +98,7 @@ void mangohud_obs_frontend_event_callback(enum obs_frontend_event event, void* p
 
 bool obs_module_load(void)
 {
+#ifdef __linux__
     int fd;
     if((fd = shm_open(MANGOHUD_OBS_STATS_SHM, O_CREAT | O_RDWR, 0666)) < 0)
     {
@@ -119,7 +117,7 @@ bool obs_module_load(void)
     }
     close(fd);
     data.sdata->running_obs = 1;
-
+#endif
     obs_frontend_add_event_callback(mangohud_obs_frontend_event_callback, NULL);
     obs_add_tick_callback(mangohud_obs_frontend_tick_callback, NULL);
 

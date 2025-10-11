@@ -1123,6 +1123,7 @@ void HudElements::obs()
 
     if(!HUDElements.obs_ptr)
         HUDElements.obs_ptr = std::make_unique<ObsStudio>();
+#ifdef __linux__
     if(!HUDElements.obs_ptr->stats)
     {
         int fd;
@@ -1145,7 +1146,7 @@ void HudElements::obs()
             atexit(HUDElements.obs_ptr->atexit_func);
         }
     }
-
+#endif
     ImguiNextColumnFirstItem();
     ImGui::PushFont(HUDElements.sw_stats->font_secondary);
     HUDElements.TextColored(HUDElements.colors.engine, "OBS");
