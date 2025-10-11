@@ -1166,7 +1166,10 @@ void HudElements::obs()
         right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%.1fMiB", HUDElements.obs_ptr->stats->bytes / 1024.0 / 1024.0);
     }else if(HUDElements.obs_ptr->stats && !HUDElements.obs_ptr->stats->recording){
         ImguiNextColumnOrNewRow();
-        right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "Inactive");
+        const char* notrecordingstate = "Inactive";
+        if(HUDElements.obs_ptr->stats->running_obs)
+            notrecordingstate = "Ready";
+        right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, notrecordingstate);
     }else{
         ImguiNextColumnOrNewRow();
         right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "Error");
