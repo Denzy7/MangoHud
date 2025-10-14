@@ -1,4 +1,5 @@
 #include "obs_plugin.h"
+#include "obs_shared.h"
 
 #include <obs-module.h>
 #include <obs-nix-platform.h>
@@ -51,11 +52,16 @@ void mangohud_obs_frontend_event_callback(enum obs_frontend_event event, void* p
             {
                 blog(LOG_INFO, "%s: stopping recording", MANGOHUD_OBS_NAME);
                 data.sdata->recording = 0;
+                obs_output_release(data.output);
+                data.output = NULL;
                 break;
             }
 
         case OBS_FRONTEND_EVENT_EXIT:
             {
+                blog(LOG_INFO, "%s: exiting", MANGOHUD_OBS_NAME);
+                if(data.output)
+                    obs_output_release(data.output);
                 data.sdata->recording = 0;
                 data.sdata->running_obs = 0;
                 break;
@@ -63,7 +69,6 @@ void mangohud_obs_frontend_event_callback(enum obs_frontend_event event, void* p
 
         case OBS_FRONTEND_EVENT_RECORDING_STOPPED:
             {
-                obs_output_release(data.output);
 
                 if(!data.sdata->prefix_exe || !data.sdata->running_mangohud)
                     break;
@@ -100,7 +105,9 @@ bool obs_module_load(void)
 {
 #ifdef __linux__
     int fd;
-    if((fd = shm_open(MANGOHUD_OBS_STATS_SHM, O_CREAT | O_RDWR, 0666)) < 0)
+    char shmpath[1024];
+    mangohud_obs_get_shmpath(shmpath, sizeof(shmpath));
+    if((fd = shm_open(shmpath, O_CREAT | O_RDWR, 0666)) < 0)
     {
         blog(LOG_ERROR, "%s: shm_open error %s", MANGOHUD_OBS_NAME, strerror(errno));
         return false;
@@ -130,13 +137,17 @@ void obs_module_unload()
 {
     if(data.sdata)
     {
+        char shmpath[1024];
+        mangohud_obs_get_shmpath(shmpath, sizeof(shmpath));
         data.sdata->running_obs = 0;
         if(!data.sdata->running_mangohud){
-            if(shm_unlink(MANGOHUD_OBS_STATS_SHM) < 0)
+            if(shm_unlink(shmpath) < 0)
                 blog(LOG_ERROR, "%s: shm_unlink error %s", MANGOHUD_OBS_NAME, strerror(errno));
         }
 
     }
+    obs_frontend_remove_event_callback(mangohud_obs_frontend_event_callback, NULL);
+    obs_remove_tick_callback(mangohud_obs_frontend_tick_callback, NULL);
 
     blog(LOG_INFO, "%s: plugin unloaded", MANGOHUD_OBS_NAME);
 }

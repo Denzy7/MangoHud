@@ -23,7 +23,6 @@
 #include "blacklist.h"
 #ifdef __linux__
 #include "implot.h"
-#include <sys/mman.h>
 #include <ctime>
 #endif
 #include "amdgpu.h"
@@ -1123,30 +1122,16 @@ void HudElements::obs()
 
     if(!HUDElements.obs_ptr)
         HUDElements.obs_ptr = std::make_unique<ObsStudio>();
-#ifdef __linux__
-    if(!HUDElements.obs_ptr->stats)
-    {
-        int fd;
-        if ((fd = shm_open(MANGOHUD_OBS_STATS_SHM, O_CREAT | O_RDWR, 0666)) < 0)
-        {
-            SPDLOG_ERROR("shm_open {}", strerror(errno));
-        }
-        if(fd > 0 && ftruncate(fd, sizeof(ObsStats)) < 0)
-        {
-            SPDLOG_ERROR( "ftruncate {}", strerror(errno));
-        }
-        if ((HUDElements.obs_ptr->stats = static_cast<ObsStats*>(mmap(nullptr, sizeof(ObsStats), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0))) == MAP_FAILED)
-        {
-            SPDLOG_ERROR( "mmap {}", strerror(errno));
-        }else {
+
+    if(!HUDElements.obs_ptr->isinit && HUDElements.obs_ptr->isinit != -1){
+        if(HUDElements.obs_ptr->init() > 0){
             snprintf(HUDElements.obs_ptr->stats->exe, sizeof(HUDElements.obs_ptr->stats->exe),
                     "%s", global_proc_name.c_str());
             HUDElements.obs_ptr->stats->prefix_exe = HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_obs_prefix_exe];
             HUDElements.obs_ptr->stats->running_mangohud = 1;
-            atexit(HUDElements.obs_ptr->atexit_func);
         }
     }
-#endif
+
     ImguiNextColumnFirstItem();
     ImGui::PushFont(HUDElements.sw_stats->font_secondary);
     HUDElements.TextColored(HUDElements.colors.engine, "OBS");

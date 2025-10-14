@@ -1,9 +1,6 @@
 #pragma once
 #include <stdint.h>
 
-#define MANGOHUD_OBS_NAME "mangohud_obs"
-#define MANGOHUD_OBS_STATS_SHM "/mangohud_ObsStats"
-
 typedef struct
 {
     int recording;
