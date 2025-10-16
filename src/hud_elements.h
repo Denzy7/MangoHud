@@ -13,7 +13,7 @@
 #include "overlay_params.h"
 #include "shell.h"
 #include "gpu.h"
-#include "obs_studio.h"
+#include "obs/obs_studio.h"
 
 struct Function {
     std::function<void()> run;  // Using std::function instead of a raw function pointer for more flexibility

@@ -55,6 +55,7 @@ int fan_speed;
 fcatoverlay fcatstatus;
 std::string drm_dev;
 int current_preset;
+
 void init_spdlog()
 {
    if (spdlog::get("MANGOHUD"))
@@ -97,6 +98,7 @@ void init_spdlog()
       spdlog::set_level(spdlog::level::from_str(log_level));
 #endif
    }
+
 }
 
 void FpsLimiter(struct fps_limit& stats){

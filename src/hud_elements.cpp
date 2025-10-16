@@ -1,4 +1,3 @@
-#include <cstdlib>
 #include <spdlog/spdlog.h>
 #include <algorithm>
 #include <functional>
@@ -23,7 +22,6 @@
 #include "blacklist.h"
 #ifdef __linux__
 #include "implot.h"
-#include <ctime>
 #endif
 #include "amdgpu.h"
 #include "fps_metrics.h"
@@ -1121,44 +1119,21 @@ void HudElements::obs()
         return;
 
     if(!HUDElements.obs_ptr)
-        HUDElements.obs_ptr = std::make_unique<ObsStudio>();
+        HUDElements.obs_ptr = std::make_unique<ObsStudio>(HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_obs_prefix_exe], global_proc_name.c_str());
 
-    if(!HUDElements.obs_ptr->isinit && HUDElements.obs_ptr->isinit != -1){
-        if(HUDElements.obs_ptr->init() > 0){
-            snprintf(HUDElements.obs_ptr->stats->exe, sizeof(HUDElements.obs_ptr->stats->exe),
-                    "%s", global_proc_name.c_str());
-            HUDElements.obs_ptr->stats->prefix_exe = HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_obs_prefix_exe];
-            HUDElements.obs_ptr->stats->running_mangohud = 1;
-        }
-    }
+    HUDElements.obs_ptr->update();
+
+    ImGui::PushFont(HUDElements.sw_stats->font_secondary);
 
     ImguiNextColumnFirstItem();
-    ImGui::PushFont(HUDElements.sw_stats->font_secondary);
     HUDElements.TextColored(HUDElements.colors.engine, "OBS");
 
-    if(HUDElements.obs_ptr->stats && HUDElements.obs_ptr->stats->recording)
-    {
-        char time[9];
-        time_t t = HUDElements.obs_ptr->stats->time;
-        struct tm* tm = gmtime(&t);
-        /* assuming recording of < 24 hrs */
-        strftime(time, sizeof(time), "%H:%M:%S", tm);
+    ImguiNextColumnFirstItem();
+    right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%s", HUDElements.obs_ptr->col1);
 
-        ImguiNextColumnOrNewRow();
-        right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%s", time);
+    ImguiNextColumnFirstItem();
+    right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%s", HUDElements.obs_ptr->col2);
 
-        ImguiNextColumnOrNewRow();
-        right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%.1fMiB", HUDElements.obs_ptr->stats->bytes / 1024.0 / 1024.0);
-    }else if(HUDElements.obs_ptr->stats && !HUDElements.obs_ptr->stats->recording){
-        ImguiNextColumnOrNewRow();
-        const char* notrecordingstate = "Inactive";
-        if(HUDElements.obs_ptr->stats->running_obs)
-            notrecordingstate = "Ready";
-        right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, notrecordingstate);
-    }else{
-        ImguiNextColumnOrNewRow();
-        right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "Error");
-    }
     ImGui::PopFont();
 }
 void HudElements::show_fps_limit(){

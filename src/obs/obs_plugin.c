@@ -22,6 +22,7 @@ static struct
 
 void mangohud_obs_frontend_event_callback(enum obs_frontend_event event, void* private_data);
 void mangohud_obs_frontend_tick_callback(void* arg, float sec);
+void mangohud_obs_prefix_exe(void);
 
 void mangohud_obs_frontend_tick_callback(void* arg, float sec)
 {
@@ -32,7 +33,32 @@ void mangohud_obs_frontend_tick_callback(void* arg, float sec)
         data.sdata->bytes = obs_output_get_total_bytes(data.output);
     }
 }
+void mangohud_obs_prefix_exe(void)
+{
+    /*
+     * TODO: we are currently renaming the output file once recording is finished.
+     * ideally obs should allow us to change output filename but there doesn't
+     * seem to exist such an API call
+     *
+     * changing filename will get complicated with multiple instances of mangohud
+     * the last instance will prevail
+     */
+    char* recording = obs_frontend_get_last_recording();
+    if(!recording)
+        return;
+    const char* filename = strrchr(recording, '/') + 1;
 
+    char* basename = strdup(recording);
+    *strrchr(basename, '/') = 0;
+
+    const size_t newpath_sz = PATH_MAX;
+    char* newpath = calloc(1, newpath_sz);
+    snprintf(newpath, newpath_sz, "%s/%s_%s", basename, data.sdata->exe, filename);
+    rename(recording, newpath);
+    free(newpath);
+    free(basename);
+    bfree(recording);
+}
 void mangohud_obs_frontend_event_callback(enum obs_frontend_event event, void* private_data)
 {
     switch (event) {
@@ -62,6 +88,8 @@ void mangohud_obs_frontend_event_callback(enum obs_frontend_event event, void* p
                 blog(LOG_INFO, "%s: exiting", MANGOHUD_OBS_NAME);
                 if(data.output)
                     obs_output_release(data.output);
+                if(data.sdata->prefix_exe && data.sdata->running_mangohud && data.sdata->recording)
+                    mangohud_obs_prefix_exe();
                 data.sdata->recording = 0;
                 data.sdata->running_obs = 0;
                 break;
@@ -72,27 +100,8 @@ void mangohud_obs_frontend_event_callback(enum obs_frontend_event event, void* p
 
                 if(!data.sdata->prefix_exe || !data.sdata->running_mangohud)
                     break;
-                /*
-                 * TODO: we are currently renaming the output file once recording is finished.
-                 * ideally obs should allow us to change output filename but there doesn't
-                 * seem to exist such an API call
-                 *
-                 * changing filename will get complicated with multiple instances of mangohud
-                 * the last instance will prevail
-                 */
-                char* recording = obs_frontend_get_last_recording();
-                const char* filename = strrchr(recording, '/') + 1;
+                mangohud_obs_prefix_exe();
 
-                char* basename = strdup(recording);
-                *strrchr(basename, '/') = 0;
-
-                const size_t newpath_sz = PATH_MAX;
-                char* newpath = calloc(1, newpath_sz);
-                snprintf(newpath, newpath_sz, "%s/%s_%s", basename, data.sdata->exe, filename);
-                rename(recording, newpath);
-                free(newpath);
-                free(basename);
-                bfree(recording);
                 break;
             }
 
