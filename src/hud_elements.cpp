@@ -1113,29 +1113,7 @@ void HudElements::resolution(){
         ImGui::PopFont();
     }
 }
-void HudElements::obs()
-{
-    if(!HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_obs])
-        return;
 
-    if(!HUDElements.obs_ptr)
-        HUDElements.obs_ptr = std::make_unique<ObsStudio>(HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_obs_prefix_exe], global_proc_name.c_str());
-
-    HUDElements.obs_ptr->update();
-
-    ImGui::PushFont(HUDElements.sw_stats->font_secondary);
-
-    ImguiNextColumnFirstItem();
-    HUDElements.TextColored(HUDElements.colors.engine, "OBS");
-
-    ImguiNextColumnFirstItem();
-    right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%s", HUDElements.obs_ptr->col1);
-
-    ImguiNextColumnFirstItem();
-    right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%s", HUDElements.obs_ptr->col2);
-
-    ImGui::PopFont();
-}
 void HudElements::show_fps_limit(){
     if (HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_show_fps_limit]){
         int fps = 0;
@@ -1936,6 +1914,27 @@ void HudElements::ftrace() {
         }
     }
 #endif // HAVE_FTRACE
+}
+
+void HudElements::obs()
+{
+#ifdef HAVE_OBS
+    if(!HUDElements.obs_ptr)
+        HUDElements.obs_ptr = std::make_unique<ObsStudio>(HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_obs_prefix_exe], global_proc_name.c_str());
+
+    ImGui::PushFont(HUDElements.sw_stats->font_secondary);
+
+    ImguiNextColumnFirstItem();
+    HUDElements.TextColored(HUDElements.colors.engine, "OBS");
+
+    ImguiNextColumnFirstItem();
+    right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%s", HUDElements.obs_ptr->col1);
+
+    ImguiNextColumnFirstItem();
+    right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%s", HUDElements.obs_ptr->col2);
+
+    ImGui::PopFont();
+#endif
 }
 
 void HudElements::sort_elements(const std::pair<std::string, std::string>& option) {
