@@ -1918,23 +1918,25 @@ void HudElements::ftrace() {
 
 void HudElements::obs()
 {
+    ImGui::PushFont(HUDElements.sw_stats->font_secondary);
+    ImguiNextColumnFirstItem();
+
+    HUDElements.TextColored(HUDElements.colors.engine, "OBS");
+
 #ifdef HAVE_OBS
     if(!HUDElements.obs_ptr)
         HUDElements.obs_ptr = std::make_unique<ObsStudio>(HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_obs_prefix_exe], global_proc_name.c_str());
-
-    ImGui::PushFont(HUDElements.sw_stats->font_secondary);
-
-    ImguiNextColumnFirstItem();
-    HUDElements.TextColored(HUDElements.colors.engine, "OBS");
 
     ImguiNextColumnFirstItem();
     right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%s", HUDElements.obs_ptr->col1);
 
     ImguiNextColumnFirstItem();
     right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%s", HUDElements.obs_ptr->col2);
-
-    ImGui::PopFont();
+#else
+    ImguiNextColumnFirstItem();
+    right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "Disabled");
 #endif
+    ImGui::PopFont();
 }
 
 void HudElements::sort_elements(const std::pair<std::string, std::string>& option) {
