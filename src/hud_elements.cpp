@@ -1918,15 +1918,18 @@ void HudElements::ftrace() {
 
 void HudElements::obs()
 {
+    if(!HUDElements.obs_ptr)
+        HUDElements.obs_ptr = std::make_unique<ObsStudio>(HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_obs_prefix_exe], global_proc_name.c_str());
+
+    if(!HUDElements.obs_ptr)
+        return;
+
     ImGui::PushFont(HUDElements.sw_stats->font_secondary);
     ImguiNextColumnFirstItem();
 
     HUDElements.TextColored(HUDElements.colors.engine, "OBS");
 
 #ifdef HAVE_OBS
-    if(!HUDElements.obs_ptr)
-        HUDElements.obs_ptr = std::make_unique<ObsStudio>(HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_obs_prefix_exe], global_proc_name.c_str());
-
     ImguiNextColumnFirstItem();
     right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%s", HUDElements.obs_ptr->col1);
 
@@ -1935,6 +1938,16 @@ void HudElements::obs()
 #else
     ImguiNextColumnFirstItem();
     right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "Disabled");
+
+    if(!HUDElements.obs_ptr->islogged_obsunavailable){
+        SPDLOG_WARN(
+                "MangoHUD obs configuration option has been enabled but "
+                "obs support was disabled during compile time, or obs libraries were not found. "
+                "MangoHUD has to be recompiled with obs support for it to work, "
+                "see meson_options.txt and build_deps.sh in the source tree."
+                );
+        HUDElements.obs_ptr->islogged_obsunavailable = 1;
+    }
 #endif
     ImGui::PopFont();
 }

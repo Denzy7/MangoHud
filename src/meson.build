@@ -62,7 +62,9 @@ vklayer_files = files(
   'file_utils.cpp',
   'nvidia.cpp',
   'gpu_fdinfo.cpp',
-  'amdgpu.cpp'
+  'amdgpu.cpp',
+  'obs/obs_studio.cpp',
+  'obs/obs_shared.c',
 )
 
 opengl_files  = []
@@ -175,25 +177,9 @@ if is_unixy
     )
   endif
 
-  if obs.found() and get_option('with_obs').enabled()
+  if obs.found() and obs_frontend_api.found() and get_option('with_obs').enabled()
     pre_args += '-DHAVE_OBS'
-    vklayer_files += files(
-      'obs/obs_studio.cpp',
-      'obs/obs_shared.c',
-    )
-    mangohud_obs = shared_module(
-      'mangohud_obs',
-      files(
-        'obs/obs_plugin.c',
-        'obs/obs_shared.c'
-        ),
-      dependencies: [
-        obs
-        ],
-      include_directories: ['/usr/include/obs'],
-      install_dir : join_paths(get_option('prefix'), get_option('libdir'), 'obs-plugins'),
-      install : true,
-    )
+    subdir('obs')
   endif
 endif
 

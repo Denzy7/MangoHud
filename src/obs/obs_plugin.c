@@ -1,9 +1,8 @@
 #include "obs_plugin.h"
 #include "obs_shared.h"
 
-#include <obs-module.h>
-#include <obs-nix-platform.h>
 #include <obs-frontend-api.h>
+#include <obs-module.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -43,8 +42,8 @@ void mangohud_obs_prefix_exe(void)
      * changing filename will get complicated with multiple instances of mangohud
      * the last instance will prevail
      */
-    char* recording = obs_frontend_get_last_recording();
-    if(!recording)
+    char recording[1024];
+    if(!mangohud_obs_get_lastrecording(recording, sizeof(recording)))
         return;
     const char* filename = strrchr(recording, '/') + 1;
 
@@ -57,7 +56,6 @@ void mangohud_obs_prefix_exe(void)
     rename(recording, newpath);
     free(newpath);
     free(basename);
-    bfree(recording);
 }
 void mangohud_obs_frontend_event_callback(enum obs_frontend_event event, void* private_data)
 {

@@ -5,6 +5,7 @@ class ObsStudio{
         ObsStudio(bool prefix_exe, const char* procname);
         static ObsStats* stats;
         static int isinit;
+        static int islogged_obsunavailable;
         static void update();
         static void atexit_func();
         static char col1[16];

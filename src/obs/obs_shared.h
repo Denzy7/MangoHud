@@ -6,7 +6,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    int mangohud_obs_get_shmpath(char* str, size_t n);
+
+int mangohud_obs_get_shmpath(char* str, size_t n);
+
+int mangohud_obs_get_lastrecording(char* str, size_t n);
 #ifdef __cplusplus
 }
 #endif

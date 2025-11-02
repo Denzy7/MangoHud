@@ -12,6 +12,7 @@
 
 ObsStats* ObsStudio::stats;
 int ObsStudio::isinit;
+int ObsStudio::islogged_obsunavailable;
 char ObsStudio::col1[16];
 char ObsStudio::col2[16];
 
