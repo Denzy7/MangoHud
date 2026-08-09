@@ -6,7 +6,7 @@ if cc.get_id() == 'clang'
 endif
 
 mangohud_obs = shared_module(
-  'MangoHUD_OBS',
+  'MangoHud_OBS',
   files(
     'obs_plugin.c',
     'obs_shared.c'
@@ -19,6 +19,7 @@ mangohud_obs = shared_module(
   include_directories: ['/usr/include/obs'],
   install_dir : join_paths(get_option('prefix'), get_option('libdir'), 'obs-plugins'),
   install : true,
+  name_prefix: '',
   c_args : extra_c_args
   )
 

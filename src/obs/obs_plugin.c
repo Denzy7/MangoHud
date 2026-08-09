@@ -29,7 +29,8 @@ void mangohud_obs_frontend_tick_callback(void* arg, float sec)
     {
         data.time_hires += sec;
         data.sdata->time = data.time_hires;
-        data.sdata->bytes = obs_output_get_total_bytes(data.output);
+        /* narrow for multilib */
+        data.sdata->bytes = (uint32_t) obs_output_get_total_bytes(data.output);
     }
 }
 void mangohud_obs_prefix_exe(void)

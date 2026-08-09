@@ -1929,26 +1929,12 @@ void HudElements::obs()
 
     HUDElements.TextColored(HUDElements.colors.engine, "OBS");
 
-#ifdef HAVE_OBS
     ImguiNextColumnFirstItem();
     right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%s", HUDElements.obs_ptr->col1);
 
     ImguiNextColumnFirstItem();
     right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "%s", HUDElements.obs_ptr->col2);
-#else
-    ImguiNextColumnFirstItem();
-    right_aligned_text(HUDElements.colors.text, HUDElements.ralign_width, "Disabled");
 
-    if(!HUDElements.obs_ptr->islogged_obsunavailable){
-        SPDLOG_WARN(
-                "MangoHUD obs configuration option has been enabled but "
-                "obs support was disabled during compile time, or obs libraries were not found. "
-                "MangoHUD has to be recompiled with obs support for it to work, "
-                "see meson_options.txt and build_deps.sh in the source tree."
-                );
-        HUDElements.obs_ptr->islogged_obsunavailable = 1;
-    }
-#endif
     ImGui::PopFont();
 }
 
